@@ -1,47 +1,31 @@
 package com.example.proyectofinal_2025a
-
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.proyectofinal_2025a.ui.theme.ProyectoFinal_2025aTheme
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ProyectoFinal_2025aTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+        setContentView(R.layout.activity_main)
+
+        val nombreEditText = findViewById<EditText>(R.id.editTextNombre)
+        val deportesCheckBox = findViewById<CheckBox>(R.id.checkBoxDeportes)
+        val musicaCheckBox = findViewById<CheckBox>(R.id.checkBoxMusica)
+        val hobbiesCheckBox = findViewById<CheckBox>(R.id.checkBoxHobbies)
+        val botonSiguiente = findViewById<Button>(R.id.botonSiguiente)
+
+        botonSiguiente.setOnClickListener {
+            val nombre = nombreEditText.text.toString()
+            val preferencias = mutableListOf<String>()
+            if (deportesCheckBox.isChecked) preferencias.add("Deportes")
+            if (musicaCheckBox.isChecked) preferencias.add("Música")
+            if (hobbiesCheckBox.isChecked) preferencias.add("Hobbies")
+
+            val intent = Intent(this, JuegoActividad::class.java)
+            intent.putExtra("nombre", nombre)
+            intent.putExtra("preferencias", preferencias.toTypedArray())
+            startActivity(intent)
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ProyectoFinal_2025aTheme {
-        Greeting("Android")
     }
 }
