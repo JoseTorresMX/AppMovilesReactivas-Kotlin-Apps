@@ -2,54 +2,87 @@ package com.example.proyectofinal_2025a
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.widget.*
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import android.telephony.TelephonyManager
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-class ResumenActividad : AppCompatActivity() {
+class ResumenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_resumen)
 
-        val textViewResumen = findViewById<TextView>(R.id.textViewResumen)
-        val botonPermisos = findViewById<Button>(R.id.botonPermisos)
+        val name = intent.getStringExtra("name") ?: ""
+        val interests = intent.getStringExtra("interests") ?: ""
+        val respuesta = intent.getStringExtra("respuesta") ?: ""
 
-        val nombre = intent.getStringExtra("nombre")
-        val preferencias = intent.getStringArrayExtra("preferencias")?.joinToString(", ")
-        val pregunta = intent.getStringExtra("pregunta")
-        val respuesta = intent.getStringExtra("respuesta")
+        val permisos = listOf(
+            Manifest.permission.READ_PHONE_STATE
+        )
 
-        val fabricante = Build.MANUFACTURER
-        val modelo = Build.MODEL
-        val version = Build.VERSION.RELEASE
-
-        val datos = "Perfil de: $nombre\nPreferencias: $preferencias\n" +
-                "Pregunta sorpresa: $pregunta\nRespuesta correcta: $respuesta\n" +
-                "\nDatos del dispositivo:\nFabricante: $fabricante\nModelo: $modelo\nVersión: $version"
-
-        textViewResumen.text = datos
-
-        val permisos = StringBuilder()
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            permisos.append("READ_PHONE_STATE: PERMITIDO\n")
-        } else {
-            permisos.append("READ_PHONE_STATE: DENEGADO\n")
+        setContent {
+            ResumenScreen(
+                name = name,
+                interests = interests,
+                respuesta = respuesta,
+                permisos = permisos,
+                getDeviceInfo = { obtenerInfoDispositivo() },
+                onAbrirConfig = { abrirConfiguracion() }
+            )
         }
+    }
 
-        textViewResumen.append("\nPermisos:\n$permisos")
+    private fun obtenerInfoDispositivo(): String {
+        val telephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        return "Operador: ${telephonyManager.networkOperatorName}\n" +
+                "Estado SIM: ${telephonyManager.simState}"
+    }
 
-        botonPermisos.setOnClickListener {
-            val intentConfig = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            val uri = Uri.fromParts("package", packageName, null)
-            intentConfig.data = uri
-            startActivity(intentConfig)
+    private fun abrirConfiguracion() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
+    }
+}
+
+@Composable
+fun ResumenScreen(
+    name: String,
+    interests: String,
+    respuesta: String,
+    permisos: List<String>,
+    getDeviceInfo: () -> String,
+    onAbrirConfig: () -> Unit
+) {
+    val infoDispositivo = getDeviceInfo()
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Resumen", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Nombre: $name")
+        Text("Intereses: $interests")
+        Text("Respuesta Trivia: $respuesta")
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Información del dispositivo:")
+        Text(infoDispositivo)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Permisos activos:")
+        permisos.forEach { permiso ->
+            Text(permiso)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Advertencia: Esta app accede a información sensible. Ten cuidado.")
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onAbrirConfig) {
+            Text("Abrir Configuración de la App")
         }
     }
 }
